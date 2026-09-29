@@ -1,0 +1,26 @@
+# LTspice generated output
+*.raw
+*.op.raw
+*.fft
+*.net
+
+# MATLAB
+*.asv
+slprj/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# EDA output
+*.bak
+*.~*
+Project Outputs*/
+History/
+__Previews/
+
+# OS
+Thumbs.db
+desktop.ini
+.DS_Store
