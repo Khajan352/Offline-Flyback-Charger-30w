@@ -24,3 +24,9 @@ __Previews/
 Thumbs.db
 desktop.ini
 .DS_Store
+
+*.SchDoc binary
+*.PrjPcb -text
+*.brd -text
+*.sch -text
+*.xlsx binary
