@@ -7,6 +7,8 @@ feedback, an RCD clamp and output overvoltage protection.
 **Status:** Simulation stage. Schematic capture started, no board built.
 **Tools:** LTspice 26.0.1, Altium Designer, Excel
 
+![Full converter schematic](images/schematic-full.png)
+
 ## Specification
 
 | Parameter | Value |
@@ -28,8 +30,16 @@ feedback, an RCD clamp and output overvoltage protection.
 | `simulation/flyback-30w.asc` | Full converter, LTspice |
 | `simulation/ovp.asc` | Output overvoltage protection, simulated separately |
 | `simulation/window-voltage-protection.asc` | Input window detector, abandoned, see below |
+| `simulation/results/` | Exported simulation captures |
 | `docs/transformer-calculator.xlsx` | Transformer sizing spreadsheet |
 | `hardware/` | Altium project and schematic document |
+| `images/schematic-full.png` | Readable export of the full schematic |
+
+Note on revisions: the schematic image above is a later capture than the
+`.asc` file in `simulation/`. The topology is identical; a handful of
+component values were still being trimmed between the two, including the
+output capacitor and the feedback divider. The `.asc` is the last saved
+simulation file.
 
 ## Design approach
 
@@ -82,7 +92,53 @@ If the feedback loop opens, the output runs away. A 22 V zener
 threshold, giving a hard limit that does not depend on the loop being
 healthy. Simulated separately in `ovp.asc`.
 
+## Simulation results
+
+### Output regulation
+
+![Output settling](simulation/results/output-settling-open-loop.png)
+
+Open-loop run with the gate driven at a fixed 18.5 percent duty from a pulse
+source, 1.85 µs on-time in a 10 µs period, into the 13.33 Ω load. The output
+settles at 19.99 V with roughly 50 mV of ripple on top.
+
+This was the check that the power stage itself was right before the control
+loop went anywhere near it. Getting the transformer, clamp and output filter
+to produce the correct voltage at a known duty first means that anything odd
+after closing the loop is the loop's fault, not the magnetics.
+
+### Overvoltage protection
+
+![OVP trip test](simulation/results/ovp-trip-test.png)
+
+The protection circuit tested on its own, with the input ramped up to 24 V
+and back down through a piecewise-linear source over a 130 ms transient. The
+22 V zener into the transistor pair sets the trip point.
+
+Testing it standalone rather than inside the converter was deliberate. In the
+full circuit a protection trip and a loop transient look similar on the
+output node, so isolating it is the only way to know the trip point is where
+the divider says it is.
+
 ## Design decisions and dead ends
+
+**PWM built behaviourally before a controller IC went in.**
+
+![Behavioural comparator revision](simulation/results/behavioural-comparator-revision.png)
+
+An earlier revision generated the gate drive from a sawtooth source and a
+behavioural comparator, `V=if(V(CTRL)>V(SAW),12,0)`, with the optocoupler
+pulling the control node. Real op-amps were tried first and did not work:
+the slew rate was too slow to produce a clean edge at 100 kHz, and a faster
+part had an input common-mode range that did not cover the operating point,
+which showed up as phase inversion rather than as an obvious failure.
+
+Rather than keep hunting for a comparator, the function was replaced with a
+behavioural source so the rest of the converter could be verified, then a
+real current-mode controller was dropped in once the power stage was known
+good. The lesson worth keeping is that an op-amp datasheet headline figure
+tells you very little about whether the part will work at the bias point you
+are actually using it at.
 
 **Window voltage detector, abandoned.** An input-range detector built from
 two shunt references was intended to inhibit the converter outside a valid
@@ -122,9 +178,9 @@ isolated feedback and protection. It has not been built.
 
 Outstanding work, in order:
 
-1. Export the simulation results. The transient run in this repository has
-   no saved waveforms, so the regulation and ripple figures are not yet
-   documented here.
+1. Closed-loop transient and load-step captures. The regulation figure here
+   is from the open-loop check; the closed-loop behaviour is simulated but
+   not yet exported.
 2. Reconcile the transformer calculator with the final design point.
 3. Finish the Altium schematic and take it to layout.
 
