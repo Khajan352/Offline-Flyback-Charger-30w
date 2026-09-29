@@ -4,8 +4,8 @@ A 30 W isolated AC-DC flyback converter designed from first principles and
 validated in LTspice. Mains input, 20 V at 1.5 A out, with optocoupler
 feedback, an RCD clamp and output overvoltage protection.
 
-**Status:** Simulation stage. Schematic capture started, no board built.
-**Tools:** LTspice 26.0.1, Altium Designer, Excel
+**Status:** Simulation stage. No board built.
+**Tools:** LTspice 26.0.1, Excel
 
 ![Full converter schematic](images/schematic-full.png)
 
@@ -32,7 +32,6 @@ feedback, an RCD clamp and output overvoltage protection.
 | `simulation/window-voltage-protection.asc` | Input window detector, abandoned, see below |
 | `simulation/results/` | Exported simulation captures |
 | `docs/transformer-calculator.xlsx` | Transformer sizing spreadsheet |
-| `hardware/` | Altium project and schematic document |
 | `images/schematic-full.png` | Readable export of the full schematic |
 
 Note on revisions: the schematic image above is a later capture than the
@@ -177,7 +176,7 @@ switching frequency cell is also stale.
    is from the open-loop check; the closed-loop behaviour is simulated but
    not yet exported.
 2. Reconcile the transformer calculator with the final design point.
-3. Finish the Altium schematic and take it to layout.
+3. Take the design through schematic capture and PCB layout.
 
 ## Licence
 
