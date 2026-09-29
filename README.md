@@ -29,7 +29,6 @@ feedback, an RCD clamp and output overvoltage protection.
 | `simulation/ovp.asc` | Output overvoltage protection, simulated separately |
 | `simulation/window-voltage-protection.asc` | Input window detector, abandoned, see below |
 | `docs/transformer-calculator.xlsx` | Transformer sizing spreadsheet |
-| `hardware/` | Altium project and schematic document |
 
 ## Design approach
 
