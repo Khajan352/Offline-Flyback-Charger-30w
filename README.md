@@ -2,7 +2,9 @@
 
 A 30 W isolated AC-DC flyback converter designed from first principles and
 validated in LTspice. Mains input, 20 V at 1.5 A out, with optocoupler
-feedback, an RCD clamp and output overvoltage protection.
+feedback, an RCD clamp and output overvoltage protection. Closed loop
+regulates to 20.05 V, with a startup overshoot that is characterised below
+and not yet fixed.
 
 **Status:** Simulation stage. No board built.
 **Tools:** LTspice 26.0.1, Excel
@@ -93,18 +95,64 @@ healthy. Simulated separately in `ovp.asc`.
 
 ## Simulation results
 
-### Output regulation
+### Closed-loop startup
+
+![Closed-loop startup, output voltage](simulation/results/closed-loop-startup-voltage.png)
+
+![Closed-loop startup, output power](simulation/results/closed-loop-startup-power.png)
+
+| Parameter | Value |
+|---|---|
+| Steady-state output | 20.05 V |
+| Steady-state power | 30.2 W |
+| Peak output during startup | 21.4 V |
+| Peak power during startup | 34.5 W |
+| Overshoot | 7 percent |
+| Settled by | Roughly 11 ms after switching begins |
+
+Regulation is good. The output overshoots once, rings down, and is flat
+inside about 11 ms, and steady state lands 0.25 percent above target. A
+single overshoot with a clean damped settle says the compensation network is
+doing its job.
+
+The flat section before 82 ms is the controller waiting on its own supply.
+Vcc charges from the rectified bus through a startup resistor into a 100 µF
+capacitor, so nothing switches until that crosses the UVLO threshold.
+
+### The startup overshoot is a real defect, not a simulation artefact
+
+21.4 V into a 13.33 Ω load is 34.5 W on a converter rated at 30 W, and it
+happens on every power-up. For a 20 V USB-C PD output, where the profile is
+specified at plus or minus 5 percent, 21.4 V is outside the window the
+device on the other end of the cable is entitled to expect. The 22 V
+overvoltage trip sits above the excursion and never fires.
+
+The cause is visible in the ramp. The output rises 0 to 20 V in about 6 ms.
+With roughly 1160 µF of output capacitance that is about 23 mC of charge, so
+an average of nearly 4 A into the capacitors against a 1.5 A rating. The
+converter spends the entire ramp against its current limit, which means the
+loop is saturated: the error amplifier is pinned at maximum demand and the
+primary is carrying peak current. When the output reaches target there is
+nothing holding it there until the amplifier unwinds, so it coasts past.
+
+The fix is soft-start, ramping the current limit up from zero over tens of
+milliseconds at the controller's compensation pin so the output charges
+slowly enough for the loop to stay linear throughout. That is the next
+change to the design, and it does not require touching the compensation
+network, which is behaving correctly.
+
+### Power stage, open loop
 
 ![Output settling](simulation/results/output-settling-open-loop.png)
 
-Open-loop run with the gate driven at a fixed 18.5 percent duty from a pulse
-source, 1.85 µs on-time in a 10 µs period, into the 13.33 Ω load. The output
-settles at 19.99 V with roughly 50 mV of ripple on top.
+Earlier open-loop run with the gate driven at a fixed 18.5 percent duty from
+a pulse source, 1.85 µs on-time in a 10 µs period, into the same load. The
+output settles at 19.99 V with roughly 50 mV of ripple.
 
-This was the check that the power stage itself was right before the control
-loop went anywhere near it. Getting the transformer, clamp and output filter
-to produce the correct voltage at a known duty first means that anything odd
-after closing the loop is the loop's fault, not the magnetics.
+This was the check that the power stage was right before the control loop
+went anywhere near it. Getting the transformer, clamp and output filter to
+produce the correct voltage at a known duty first means anything odd after
+closing the loop is the loop's fault, not the magnetics.
 
 ### Overvoltage protection
 
@@ -172,11 +220,11 @@ switching frequency cell is also stale.
 
 ## Outstanding work, in order:
 
-1. Closed-loop transient and load-step captures. The regulation figure here
-   is from the open-loop check; the closed-loop behaviour is simulated but
-   not yet exported.
-2. Reconcile the transformer calculator with the final design point.
-3. Take the design through schematic capture and PCB layout.
+1. Add soft-start and re-run, to remove the 7 percent startup overshoot and
+   bring peak power inside the 30 W rating.
+2. Load-step response. Startup is characterised, step response is not.
+3. Reconcile the transformer calculator with the final design point.
+4. Take the design through schematic capture and PCB layout.
 
 ## Licence
 
