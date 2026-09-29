@@ -1,2 +1,7 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+*.SchDoc binary
+*.PrjPcb -text
+*.brd -text
+*.sch -text
+*.xlsx binary
