@@ -171,12 +171,7 @@ switching frequency cell is also stale.
 | U3 | TL431 | Shunt reference and error amplifier |
 | D7 | BZX84B22VLY | 22 V zener, output overvoltage trip |
 
-## Status and next steps
-
-The converter simulates as an integrated design: power stage, clamp,
-isolated feedback and protection. It has not been built.
-
-Outstanding work, in order:
+## Outstanding work, in order:
 
 1. Closed-loop transient and load-step captures. The regulation figure here
    is from the open-loop check; the closed-loop behaviour is simulated but
